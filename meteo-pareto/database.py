@@ -1,5 +1,7 @@
 import psycopg2
+import pprint
 
+# Connect to RDS Database using credentials given through dbcredentials.txt
 def connectToDB():
 	try:
 		#Reading dbcredentials.txt to get db connection info
@@ -24,3 +26,133 @@ def connectToDB():
 	    print("I am unable to connect to the database")
 
 	    return None
+
+# Init database with a table climate
+def initDatabase():
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("CREATE TABLE climate("+
+				"id SERIAL,"
+				"date date,"+
+				"rainfall real,"+
+				"temperature int"
+
+			");")
+		print(" Table climate was successfully created")
+	except psycopg2.OperationalError as e:
+		print("I can't CREATE TABLE climate\n").format(e)
+		return
+
+	conn.commit()
+
+	cur.close()
+	conn.close()
+
+# CAREFUL! Drop table climate
+def dropClimateTable():
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("DROP TABLE climate;")
+		print(" Table climate was successfully dropped")
+	except:
+		print("I can't DROP TABLE climate")
+		return
+
+	conn.commit()
+
+	cur.close()
+	conn.close()
+
+
+""" Insert row into table climate
+	Argument: date ("DD/MM/YYYY"), rainfall (float), temp (int)
+"""
+def insertIntoClimate(datei, rainfall, temp):
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("INSERT INTO climate (date, rainfall, temperature) VALUES (to_date(%s, 'DD/MM/YYYY'),%s,%s)",
+			(datei,
+			rainfall,
+			temp))
+		print(" Insert into Table climate was successfully done")
+	except psycopg2.OperationalError as e:
+		print("I can't INSERT INTO climate\n").format(e)
+		return
+
+	conn.commit()
+
+	cur.close()
+	conn.close()
+
+# Select All rows from Table climate
+def selectAllFromClimate():
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("SELECT * FROM climate")
+		print(" Select all rows from Table climate was successfully done")
+	except psycopg2.OperationalError as e:
+		print("I can't SELECT FROM climate\n").format(e)
+		return
+
+	rows = cur.fetchall()
+
+	#Uncomment it in case you need to see the output
+	print("\nRows: \n")
+	pprint.pprint(rows)
+
+	cur.close()
+	conn.close()
+
+	return rows
+
+
+""" Select specific row from Table Climate
+	Argument: row id (string)
+"""
+def selectRowFromClimate(cid):
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("SELECT * FROM climate WHERE id = (%s)", (cid,))
+		print(" Select row from Table climate was successfully done")
+	except psycopg2.OperationalError as e:
+		print("I can't SELECT FROM climate\n").format(e)
+		return
+
+	row = cur.fetchall()
+
+	#Uncomment it in case you need to see the output
+	print("\nRow: \n")
+	pprint.pprint(row)
+
+	cur.close()
+	conn.close()
+	return row
+
+""" Delete specific row from Table Climate
+	Argument: row id (string)
+"""
+def deleteRowFromClimate(cid):
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("DELETE FROM climate WHERE id = (%s)", (cid,))
+		print(" Row from Table climate was successfully deleted")
+	except psycopg2.OperationalError as e:
+		print("I can't DELETE FROM climate\n").format(e)
+		return
+	
+	conn.commit()
+
+	cur.close()
+	conn.close()
