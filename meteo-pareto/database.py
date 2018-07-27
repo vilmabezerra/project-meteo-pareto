@@ -81,9 +81,10 @@ def insertIntoClimate(datei, rainfall, temp):
 			rainfall,
 			temp))
 		print(" Insert into Table climate was successfully done")
+		return true
 	except psycopg2.OperationalError as e:
 		print("I can't INSERT INTO climate\n").format(e)
-		return
+		return false
 
 	conn.commit()
 
@@ -100,22 +101,18 @@ def selectAllFromClimate():
 		print(" Select all rows from Table climate was successfully done")
 	except psycopg2.OperationalError as e:
 		print("I can't SELECT FROM climate\n").format(e)
-		return
+		return 
 
 	rows = cur.fetchall()
-
-	#Uncomment it in case you need to see the output
-	print("\nRows: \n")
-	pprint.pprint(rows)
 
 	cur.close()
 	conn.close()
 
-	return rows
+	return adaptRowstoJson(rows)
 
 
 """ Select specific row from Table Climate
-	Argument: row id (string)
+	Argument: id (int)
 """
 def selectRowFromClimate(cid):
 	conn = connectToDB()
@@ -128,18 +125,15 @@ def selectRowFromClimate(cid):
 		print("I can't SELECT FROM climate\n").format(e)
 		return
 
-	row = cur.fetchall()
-
-	#Uncomment it in case you need to see the output
-	print("\nRow: \n")
-	pprint.pprint(row)
+	rows = cur.fetchall()
 
 	cur.close()
 	conn.close()
-	return row
+
+	return adaptRowstoJson(rows)
 
 """ Delete specific row from Table Climate
-	Argument: row id (string)
+	Argument: id (int)
 """
 def deleteRowFromClimate(cid):
 	conn = connectToDB()
@@ -148,11 +142,28 @@ def deleteRowFromClimate(cid):
 	try:
 		cur.execute("DELETE FROM climate WHERE id = (%s)", (cid,))
 		print(" Row from Table climate was successfully deleted")
+		
 	except psycopg2.OperationalError as e:
 		print("I can't DELETE FROM climate\n").format(e)
-		return
+		return False
 	
 	conn.commit()
 
 	cur.close()
 	conn.close()
+	return True
+
+
+"""
+	Adapt rows from DB to be used as arguments of jsonify function
+
+	Function used by selectAllFromClimate() and selectRowFromClimate()
+"""
+def adaptRowstoJson(rows):
+	#Uncomment it in case you need to see the output
+	print("\nRow: \n")
+	pprint.pprint(rows)
+
+	to_dict = lambda row: {"id":row[0],"date":row[1],"rainfall":row[2],"temperature":row[3]}
+
+	return list(map(to_dict, rows))
