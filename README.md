@@ -6,28 +6,28 @@ Python + Flask deployed to AWS
 
 ## Documentation
 
-### List all climate data
+### List all climate entries
 
 #### Request:
 
-    GET/climate 
+    GET  /climate 
 
-### View one specific climate data
+### View one specific climate entry
 
 #### Request:
-    GET/climate/<id>
+    GET  /climate/<id>
   
-### Add climate data
+### Add climate entry
 
 #### Request:
-    POST/climate
+    POST  /climate
 
-### Delete climate data
+### Delete climate entry
 
 #### Request:
-    DELETE/climate/<id>
+    DELETE  /climate/<id>
   
 ### View current day climate prediction
 
 #### Request:
-    GET/climate/predict
+    GET  /climate/predict
