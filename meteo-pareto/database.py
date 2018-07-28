@@ -2,7 +2,10 @@ import psycopg2
 import pprint
 from psycopg2 import sql
 
-# Connect to RDS Database using credentials given through dbcredentials.txt
+
+"""
+ 	Connect to RDS Database using credentials given through dbcredentials.txt
+"""
 def connectToDB():
 	try:
 		#Reading dbcredentials.txt to get db connection info
@@ -28,7 +31,9 @@ def connectToDB():
 
 	    return None
 
-# Init database with a table climate
+"""
+ 	Init database with a table climate
+"""
 def initDatabase():
 	conn = connectToDB()
 	cur = conn.cursor()
@@ -51,7 +56,9 @@ def initDatabase():
 	cur.close()
 	conn.close()
 
-# CAREFUL! Drop table climate
+"""
+ 	CAREFUL! Drop table climate
+"""
 def dropClimateTable():
 	conn = connectToDB()
 	cur = conn.cursor()
@@ -69,7 +76,8 @@ def dropClimateTable():
 	conn.close()
 
 
-""" Insert row into table climate
+""" 
+	Insert row into table climate
 	Argument: date ("DD/MM/YYYY"), rainfall (float), temp (int)
 """
 def insertIntoClimate(datei, rainfall, temp):
@@ -92,9 +100,9 @@ def insertIntoClimate(datei, rainfall, temp):
 	cur.close()
 	conn.close()
 """
- Select All rows from Table climate according to filters applied
- Arguments: date (string or None), rainfall (float or None), temperature (int or None),
-			month (int or None), year (int or None)
+	 Select All rows from Table climate according to filters applied
+	 Arguments: date (string or None), rainfall (float or None), temperature (int or None),
+				month (int or None), year (int or None)
 """
 def selectAllFromClimate(date, rainfall, temperature, month, year):
 	conn = connectToDB()
@@ -115,10 +123,11 @@ def selectAllFromClimate(date, rainfall, temperature, month, year):
 	cur.close()
 	conn.close()
 
-	return adaptRowstoJson(rows)
+	return adaptRowstoDict(rows)
 
 
-""" Select specific row from Table Climate
+""" 
+	Select specific row from Table Climate
 	Argument: id (int)
 """
 def selectRowFromClimate(cid):
@@ -137,7 +146,7 @@ def selectRowFromClimate(cid):
 	cur.close()
 	conn.close()
 
-	return adaptRowstoJson(rows)
+	return adaptRowstoDict(rows)
 
 """ 
 	Select all rows from the last 30 days from Table Climate
@@ -158,7 +167,7 @@ def selectRowsToPredict():
 	cur.close()
 	conn.close()
 
-	return adaptRowstoJson(rows)
+	return adaptRowstoDict(rows)
 
 """ Delete specific row from Table Climate
 	Argument: id (int)
@@ -187,16 +196,20 @@ def deleteRowFromClimate(cid):
 
 	Function used by selectAllFromClimate() and selectRowFromClimate()
 """
-def adaptRowstoJson(rows):
+def adaptRowstoDict(rows):
 	#Uncomment it in case you need to see the output
-	print("\nRow: \n")
-	pprint.pprint(rows)
+	#print("\nRow: \n")
+	#pprint.pprint(rows)
 
 	to_dict = lambda row: {"id":row[0],"date":row[1],"rainfall":row[2],"temperature":row[3]}
 
 	return list(map(to_dict, rows))
 
-# 
+"""
+ 	Construct query according to filters 
+ 	Arguments: date (string or None), rainfall (float or None), temperature (int or None),
+			   month (int or None), year (int or None)
+"""
 def buildQueryFromFilters(date, rainfall, temperature, month, year):
 	query = sql.SQL("SELECT * FROM climate")
 

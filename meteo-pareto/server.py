@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask import request
 import database
 import datetime
+import time
 
 app = Flask(__name__)
 
@@ -77,21 +78,41 @@ def climateIDReq(id):
 
 
 """
-	GET /climate/predict - climate prediction for today
+	GET /climate/predict - climate prediction for today according to Exponential Moving Average
 """
 @app.route('/climate/predict')
 def climatePredictReq():
+	#Define Temp and Rain Beta (0.7 or 0.8 are recommended)
+	betaT = 0.8
+	betaR = 0.85 
+
 	#Get rows from database
 	rows = database.selectRowsToPredict()
 
-	# Return rows as JSON
-	if(rows != None):
-		#TODO
-		pass
+	# Return prediction in case there are some entries from the last 30 days
+	if(len(rows) != 0):
+		tempPrediction = predict(rows, betaT, 'temperature')
+		rainPrediction = predict(rows, betaR, 'rainfall')
+		return jsonify({"todays-temperature-prediction":tempPrediction, "todays-rainfall-prediction":rainPrediction})
 	else:
 		return jsonify({"message": "Unable to predict. No entry from the last 30 days was added yet."})
 	
 
+def predict(rows, beta, attribute):
+	today = datetime.date.today()
+	totalWeights = 0
+	totalWeighted = 0
+
+	for row in rows:
+		diff = (today - row['date']).days
+		weight = beta**diff
+
+		totalWeights += weight
+		totalWeighted += weight*row[attribute]
+
+	prediction = round(totalWeighted/totalWeights, 3)
+
+	return prediction
 
 if __name__ == '__main__':
 	app.run()
