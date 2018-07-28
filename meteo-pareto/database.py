@@ -1,5 +1,6 @@
 import psycopg2
 import pprint
+from psycopg2 import sql
 
 # Connect to RDS Database using credentials given through dbcredentials.txt
 def connectToDB():
@@ -76,28 +77,34 @@ def insertIntoClimate(datei, rainfall, temp):
 	cur = conn.cursor()
 
 	try:
-		cur.execute("INSERT INTO climate (date, rainfall, temperature) VALUES (to_date(%s, 'DD/MM/YYYY'),%s,%s)",
+		cur.execute("INSERT INTO climate (date, rainfall, temperature) VALUES (to_date(%s, 'DD-MM-YYYY'),%s,%s)",
 			(datei,
 			rainfall,
 			temp))
 		print(" Insert into Table climate was successfully done")
-		return true
+		return True
 	except psycopg2.OperationalError as e:
 		print("I can't INSERT INTO climate\n").format(e)
-		return false
+		return False
 
 	conn.commit()
 
 	cur.close()
 	conn.close()
-
-# Select All rows from Table climate
-def selectAllFromClimate():
+"""
+ Select All rows from Table climate according to filters applied
+ Arguments: date (string or None), rainfall (float or None), temperature (int or None),
+			month (int or None), year (int or None)
+"""
+def selectAllFromClimate(date, rainfall, temperature, month, year):
 	conn = connectToDB()
 	cur = conn.cursor()
 
+	query, values = buildQueryFromFilters(date,rainfall, temperature, month, year)
+
+	print(query.as_string(conn))
 	try:
-		cur.execute("SELECT * FROM climate")
+		cur.execute(query, values)
 		print(" Select all rows from Table climate was successfully done")
 	except psycopg2.OperationalError as e:
 		print("I can't SELECT FROM climate\n").format(e)
@@ -121,6 +128,27 @@ def selectRowFromClimate(cid):
 	try:
 		cur.execute("SELECT * FROM climate WHERE id = (%s)", (cid,))
 		print(" Select row from Table climate was successfully done")
+	except psycopg2.OperationalError as e:
+		print("I can't SELECT FROM climate\n").format(e)
+		return
+
+	rows = cur.fetchall()
+
+	cur.close()
+	conn.close()
+
+	return adaptRowstoJson(rows)
+
+""" 
+	Select all rows from the last 30 days from Table Climate
+"""
+def selectRowsToPredict():
+	conn = connectToDB()
+	cur = conn.cursor()
+
+	try:
+		cur.execute("SELECT * FROM climate WHERE date > current_date - interval '30' day;")
+		print(" Select entries from the last 30 days was successfully done")
 	except psycopg2.OperationalError as e:
 		print("I can't SELECT FROM climate\n").format(e)
 		return
@@ -167,3 +195,41 @@ def adaptRowstoJson(rows):
 	to_dict = lambda row: {"id":row[0],"date":row[1],"rainfall":row[2],"temperature":row[3]}
 
 	return list(map(to_dict, rows))
+
+# 
+def buildQueryFromFilters(date, rainfall, temperature, month, year):
+	query = sql.SQL("SELECT * FROM climate")
+
+	conditions = []
+	values = []
+
+	if date != None:
+		clause = sql.SQL("date = to_date(%s, 'DD-MM-YYYY')")
+		conditions.append(clause)
+		values.append(date)
+	if temperature != None:
+		clause = sql.SQL("temperature = (%s)")
+		conditions.append(clause)
+		values.append(temperature)
+	if rainfall != None:
+		clause = sql.SQL("rainfall = (%s)")
+		conditions.append(clause)
+		values.append(rainfall)
+	if month != None:
+		clause = sql.SQL("EXTRACT(MONTH FROM date) = (%s)")
+		conditions.append(clause)
+		values.append(month)
+	if year != None:
+		clause = sql.SQL("EXTRACT(YEAR FROM date) = (%s)")
+		conditions.append(clause)
+		values.append(year)
+
+
+	if len(conditions) > 0:
+		query = sql.SQL(" ").join([query, sql.SQL("WHERE")])
+
+		conj = sql.SQL(" AND ").join(conditions)
+
+		query = sql.SQL(" ").join([query, conj])
+
+	return query, values

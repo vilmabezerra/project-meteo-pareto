@@ -11,7 +11,7 @@ def hello_world():
 
 """
 	POST /climate - Add row to table climate 
-	GET /climate - List all table climate's rows
+	GET /climate - List all table climate's rows according to filters applied
 """
 @app.route('/climate', methods=['GET', 'POST'])
 def climateReq():
@@ -29,26 +29,30 @@ def climateReq():
 		else:
 			return jsonify({"message": "It is not a JSON file"})
 
-	# List all rows of climate
+	# List all rows of climate according to filters
 	else:
-		#Get filter sent through URL
-		date = request.args.get('date', default = None, type = datetime.date)
+		#Get filters sent through URL
+		date = request.args.get('date', default = None, type = str)
 		rainfall = request.args.get('rainfall', default = None, type = float)
 		temperature = request.args.get('temperature', default = None, type = int)
+		month = request.args.get('month', default = None, type = int)
+		year = request.args.get('year', default = None, type = int)
 
-		#No filter added
-		if ((date == None) and (rainfall == None) and (temperature == None)):
-			rows = database.selectAllFromClimate()
+		#Check date filter appplied
+		try:
+			if (date == None):
+				pass
+			else:
+				datetime.datetime.strptime(date, '%d-%m-%Y')
+		except:
+			return jsonify({"message":"Date filter should have 'DD-MM-YYYY' format"})
 
-		#With filter
-		else:
-			#TODO
+		#Get rows from database
+		rows = database.selectAllFromClimate(date, rainfall, temperature, month, year)
 
-		# Return JSON results
-		if(rows != None):
-			return jsonify(rows)
-		else:
-			return jsonify({"message": "None climate was added yet"})
+		# Return rows as JSON
+		return jsonify(rows)
+		
 
 
 """
@@ -60,24 +64,33 @@ def climateIDReq(id):
 	
 	if request.method == 'GET':
 		row = database.selectRowFromClimate(id)
-		if(row != None):
-			return jsonify(row)
-		else:
-			return jsonify({"message": "There is no such row"})
+
+		#Return row as JSON
+		return jsonify(row)
 
 	else:
 		response = database.deleteRowFromClimate(id)
 		if (response):
-			return jsonify({"message": "Climate deleted"})
+			return jsonify({"message": "Climate successfully deleted"})
 		else:
-			return jsonify({"message": "Could not deleted Climate"})
+			return jsonify({"message": "Could not delete Climate"})
+
 
 """
 	GET /climate/predict - climate prediction for today
 """
 @app.route('/climate/predict')
 def climatePredictReq():
-	#TODO
+	#Get rows from database
+	rows = database.selectRowsToPredict()
+
+	# Return rows as JSON
+	if(rows != None):
+		#TODO
+		pass
+	else:
+		return jsonify({"message": "Unable to predict. No entry from the last 30 days was added yet."})
+	
 
 
 if __name__ == '__main__':
