@@ -90,7 +90,7 @@ def insertIntoClimate(datei, rainfall, temp):
 			rainfall,
 			temp))
 		print(" Insert into Table climate was successfully done")
-		return True
+		
 	except psycopg2.OperationalError as e:
 		print("I can't INSERT INTO climate\n").format(e)
 		return False
@@ -99,6 +99,8 @@ def insertIntoClimate(datei, rainfall, temp):
 
 	cur.close()
 	conn.close()
+	
+	return True
 """
 	 Select All rows from Table climate according to filters applied
 	 Arguments: date (string or None), rainfall (float or None), temperature (int or None),
