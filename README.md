@@ -4,7 +4,6 @@ API REST to store and manage climate data
 
 Python + Flask deployed to an EC2 and using a RDS database
 
-
 ## Documentation
 
 There are a few avalable resquests to this API, which are described bellow. 
