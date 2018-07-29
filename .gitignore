@@ -1,3 +1,6 @@
-/lib
-/bin
-/include
+*/lib/
+*/bin/
+*/include/
+*/man/
+meteo-pareto/__pycache__
+meteo-pareto/dbcredentials.txt
