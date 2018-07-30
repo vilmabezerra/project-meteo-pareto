@@ -3,4 +3,5 @@
 */include/
 */man/
 meteo-pareto/__pycache__/
+*/__pycache__/
 meteo-pareto/dbcredentials.txt
