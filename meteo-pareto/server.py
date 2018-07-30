@@ -12,8 +12,7 @@ def hello():
 
 @app.route('/climate', methods=['GET', 'POST'])
 def climateReq():
-""" Handle requests to /climate URL """
-
+	""" Handle requests to /climate URL """
 	# POST /climate - Add row to table climate 
 	if request.method == 'POST':
 
@@ -64,12 +63,12 @@ def climateReq():
 
 @app.route('/climate/<id>', methods=['GET', 'DELETE'])
 def climateIDReq(id):
-""" Handle requests to /climate/<id> 
+	""" Handle requests to /climate/<id> 
 
-Keyword arguments:
-id -- int
+	Keyword arguments:
+	id -- int
 
-"""
+	"""
 	# GET /climate/<id> - List one row 
 	if request.method == 'GET':
 		row = database.selectRowFromClimate(id)
@@ -91,7 +90,7 @@ id -- int
 
 @app.route('/climate/predict')
 def climatePredictReq():
-""" Handle request to /climate/predict """
+	""" Handle request to /climate/predict """
 
 	#GET /climate/predict - today's climate prediction 
 
@@ -123,14 +122,15 @@ def climatePredictReq():
 	
 
 def predict(rows, beta, attribute):
-""" Calculate prediction according to Exponential Moving Average method 
-	
-Keyword arguments:
-rows -- list of dicts
-beta -- float
-attribute -- str
+	""" Calculate prediction according to Exponential Moving Average method 
+		
+	Keyword arguments:
+	rows -- list of dicts
+	beta -- float
+	attribute -- str
 
-"""
+	"""
+	
 	today = datetime.date.today()
 	totalWeights = 0
 	totalWeighted = 0

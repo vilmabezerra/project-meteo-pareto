@@ -5,7 +5,7 @@ from psycopg2 import sql
 
 
 def connectToDB():
-""" Connect to RDS Database using credentials given through dbcredentials.txt """
+	""" Connect to RDS Database using credentials given through dbcredentials.txt """
 
 	try:
 		# Reading dbcredentials.txt to get db connection info
@@ -36,7 +36,7 @@ def connectToDB():
 
 
 def initDatabase():
-""" Init database with a table climate """
+	""" Init database with a table climate """
 
 	conn = connectToDB()
 	cur = conn.cursor()
@@ -61,10 +61,10 @@ def initDatabase():
 
 
 def dropClimateTable():
-""" Drop table climate
+	""" Drop table climate
 
-	CAREFUL! 
-"""
+		CAREFUL! 
+	"""
 	conn = connectToDB()
 	cur = conn.cursor()
 
@@ -83,13 +83,13 @@ def dropClimateTable():
 
 
 def insertIntoClimate(datei, rainfall, temp):
-""" Insert row into table climate
+	""" Insert row into table climate
 
-	Keyword argument: 
-	datei -- str
-	rainfall -- float 
-	temp -- int 
-"""
+		Keyword argument: 
+		datei -- str
+		rainfall -- float 
+		temp -- int 
+	"""
 	conn = connectToDB()
 	cur = conn.cursor()
 
@@ -113,26 +113,26 @@ def insertIntoClimate(datei, rainfall, temp):
 	return True
 
 def selectAllFromClimate(date, rainfall, temperature, month, year):
-""" Select All rows from Table climate according to filters applied
+	""" Select All rows from Table climate according to filters applied
 
-Keyword arguments: 
-date -- string or None 
-rainfall -- float or None
-temperature -- int or None
-month -- int or None 
-year -- int or None
+	Keyword arguments: 
+	date -- string or None 
+	rainfall -- float or None
+	temperature -- int or None
+	month -- int or None 
+	year -- int or None
 
-"""
+	"""
 	conn = connectToDB()
 	cur = conn.cursor()
 
 	# Check filters and build query according to the ones apllied
 	query, values = buildQueryFromFilters(date, rainfall, 
-		temperature, month, year)
+					temperature, month, year)
 
 
 	# Uncomment this in case you need to see the final query
-	#print(query.as_string(conn))
+	print(query.as_string(conn))
 
 	try:
 		cur.execute(query, values)
@@ -146,16 +146,16 @@ year -- int or None
 	cur.close()
 	conn.close()
 
-	return adaptRowstoDict(rows)
+	return rowsToDict(rows)
 
 
 def selectRowFromClimate(cid):
-""" Select specific row from Table Climate
+	""" Select specific row from Table Climate
 
-Keyword argument: 
-cid -- int
+	Keyword argument: 
+	cid -- int
 
-"""
+	"""
 	conn = connectToDB()
 	cur = conn.cursor()
 
@@ -175,11 +175,11 @@ cid -- int
 	cur.close()
 	conn.close()
 
-	return adaptRowstoDict(rows)
+	return rowsToDict(rows)
 
 
 def selectRowsToPredict():
-""" Select all rows from the last 30 days from Table Climate """
+	""" Select all rows from the last 30 days from Table Climate """
 
 	conn = connectToDB()
 	cur = conn.cursor()
@@ -200,15 +200,15 @@ def selectRowsToPredict():
 	cur.close()
 	conn.close()
 
-	return adaptRowstoDict(rows)
+	return rowsToDict(rows)
 
 def deleteRowFromClimate(cid):
-""" Delete specific row from Table Climate
-	
-Keyword argument: 
-cid -- int
+	""" Delete specific row from Table Climate
+		
+	Keyword argument: 
+	cid -- int
 
-"""
+	"""
 	conn = connectToDB()
 	cur = conn.cursor()
 
@@ -228,19 +228,21 @@ cid -- int
 	return True
 
 
-def adaptRowstoDict(rows):
-""" Adapt rows from DB to be used as arguments of jsonify function
+def rowsToDict(rows):
+	""" Put rows from DB into a dictionary to be used an argument of jsonify function
 
-Function used by selectAllFromClimate(), selectRowFromClimate() and selectRowsToPredict()
+	Eventually one could construct a class to represent DB rows
 
-"""
+	Function used by selectAllFromClimate(), selectRowFromClimate() and selectRowsToPredict()
+
+	"""
 
 	# Uncomment it in case you need to see the output
 	#print("\nRow: \n")
 	#pprint.pprint(rows)
 
 	to_dict = lambda row: {
-		"id":row[0], "date":row[1].date(), "rainfall":row[2], 
+		"id":row[0], "date":row[1], "rainfall":row[2], 
 		"temperature":row[3]
 	}
 
@@ -248,16 +250,16 @@ Function used by selectAllFromClimate(), selectRowFromClimate() and selectRowsTo
 
 
 def buildQueryFromFilters(date, rainfall, temperature, month, year):
-""" Construct query according to filters 
+	""" Construct query according to filters 
 
-Keyword arguments: 
-date -- string or None 
-rainfall -- float or None 
-temperature -- int or None
-month -- int or None 
-year -- int or None
+	Keyword arguments: 
+	date -- string or None 
+	rainfall -- float or None 
+	temperature -- int or None
+	month -- int or None 
+	year -- int or None
 
-"""
+	"""
 	# Main part of the query
 	query = sql.SQL("SELECT * FROM climate")
 
@@ -275,7 +277,7 @@ year -- int or None
 		conditions.append(clause)
 		values.append(temperature)
 	if rainfall != None:
-		clause = sql.SQL("rainfall = (%s)")
+		clause = sql.SQL("rainfall = real '%s'")
 		conditions.append(clause)
 		values.append(rainfall)
 	if month != None:
@@ -295,4 +297,5 @@ year -- int or None
 
 		query = sql.SQL(" ").join([query, conj])
 
+	
 	return query, values
