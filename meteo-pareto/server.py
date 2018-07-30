@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask import request
+from flask import send_file
 import database
 import datetime
 
@@ -119,7 +120,24 @@ def climatePredictReq():
 				"Unable to predict. No entry from the last 30 days was added yet."})
 		else:
 			return jsonify({"message":"Database Error"})
-	
+
+
+@app.route('/climate/csv', methods=['GET'])
+def climatesCSVReq():
+	""" Handle requests to /climate/csv """
+
+	# GET /climate/csv - Download CSV file with all rows listed
+
+	database.putEntriesIntoCSV()
+
+	path = 'climateEntries.csv'
+
+	try:
+		return send_file(path, as_attachment=True)
+	except Exception as exc:
+		return jsonify({"message":"File could not be downloaded: " 
+			+ format(exc)})
+
 
 def predict(rows, beta, attribute):
 	""" Calculate prediction according to Exponential Moving Average method 
