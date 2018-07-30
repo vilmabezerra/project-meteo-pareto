@@ -32,7 +32,7 @@ Available Filters (Usage):
 
 As an example of a request with filters applied we have:
 
-    GET  /climate?month=7&temperature=25&date=25-07-2018
+    GET  /climate?month=7&temperature=31&date=25-05-2000
 
 #### Add climate entry
 
@@ -74,6 +74,16 @@ prediction according to an Exponential Moving Average from the last 30 days entr
 
 Notice that, if there is no entry from the last 30 days, the prediction could not be done.
 
+#### Download CSV file with all entries
+
+The request bellow should be used to get a CSV file with all entries available in database
+
+    GET /climate/csv
+    
+A file named climateEntries.csv should be downloaded
+
 ### Tips
 
 - In order to manually test the functional requisites, Postman tool is advised
+
+	Obs: Postman does not work with the requests that should download files
