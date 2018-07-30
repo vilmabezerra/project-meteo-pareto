@@ -78,7 +78,7 @@ Notice that, if there is no entry from the last 30 days, the prediction could no
 
 The request bellow should be used to get a CSV file with all entries available in database
 
-    GET /climate/csv
+    GET /climate/climateEntries.csv
     
 A file named climateEntries.csv should be downloaded
 
