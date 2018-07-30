@@ -122,9 +122,9 @@ def climatePredictReq():
 			return jsonify({"message":"Database Error"})
 
 
-@app.route('/climate/csv', methods=['GET'])
+@app.route('/climate/climateEntries.csv', methods=['GET'])
 def climatesCSVReq():
-	""" Handle requests to /climate/csv """
+	""" Handle requests to /climate/climateEntries.csv """
 
 	# GET /climate/csv - Download CSV file with all rows listed
 
