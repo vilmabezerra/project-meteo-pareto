@@ -1,6 +1,7 @@
 import psycopg2
 import pprint
 import datetime
+import csv
 from psycopg2 import sql
 
 
@@ -115,15 +116,15 @@ def insertIntoClimate(datei, rainfall, temp):
 	return True
 
 
-def selectAllFromClimate(date, rainfall, temperature, month, year):
+def selectAllFromClimate(date = None, rainfall = None, temperature = None, month = None, year = None):
 	""" Select All rows from Table climate according to filters applied
 
 	Keyword arguments: 
-	date -- string or None 
-	rainfall -- float or None
-	temperature -- int or None
-	month -- int or None 
-	year -- int or None
+	date -- string (default: None)
+	rainfall -- float (default: None)
+	temperature -- int (default: None)
+	month -- int (default: None)
+	year -- int (default: None)
 
 	"""
   
@@ -303,3 +304,18 @@ def buildQueryFromFilters(date, rainfall, temperature, month, year):
 
 	
 	return query, values
+
+
+def putEntriesIntoCSV():
+	""" Put All climate entries into a CSV file named climateEntries.csv """
+
+	with open('climateEntries.csv', 'w', newline='') as csvfile:
+		fieldnames = ['id', 'date', 'rainfall', 'temperature']
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+		writer.writeheader()
+
+		rows = selectAllFromClimate()
+		for row in rows:
+			writer.writerow(row)
+
