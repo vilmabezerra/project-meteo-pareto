@@ -7,7 +7,9 @@ class ApiTests(unittest.TestCase):
 	""" Unit Testing - Test Cases """
 
 	def testPredict(self):
-		""" Test function predict(), which is implemented in server.py """
+		""" Test function predict(), 
+			which is implemented in server.py 
+		"""
 
 		now = datetime.datetime.now()
 		oneDay = datetime.timedelta(days = 1)
