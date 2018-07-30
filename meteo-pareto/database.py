@@ -103,6 +103,7 @@ def insertIntoClimate(datei, rainfall, temp):
 		
 	except psycopg2.OperationalError as exc:
 		print("I can't INSERT INTO climate\n").format(exc)
+
 		return False
 
 	conn.commit()
@@ -110,7 +111,9 @@ def insertIntoClimate(datei, rainfall, temp):
 	cur.close()
 	conn.close()
 
+
 	return True
+
 
 def selectAllFromClimate(date, rainfall, temperature, month, year):
 	""" Select All rows from Table climate according to filters applied
@@ -123,6 +126,7 @@ def selectAllFromClimate(date, rainfall, temperature, month, year):
 	year -- int or None
 
 	"""
+  
 	conn = connectToDB()
 	cur = conn.cursor()
 
