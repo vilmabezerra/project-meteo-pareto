@@ -2,103 +2,135 @@ from flask import Flask, jsonify
 from flask import request
 import database
 import datetime
-import time
 
 app = Flask(__name__)
 
 @app.route('/')
-def hello_world():
-	return jsonify({"message": "Hello World!"})
+def hello():
+	return jsonify({"message": "Welcome!"})
 
-"""
-	POST /climate - Add row to table climate 
-	GET /climate - List all table climate's rows according to filters applied
-"""
+
 @app.route('/climate', methods=['GET', 'POST'])
 def climateReq():
-	# Adding row to climate
-	if request.method == 'POST':
-		if (request.is_json):
-			content = request.get_json()
-			print (content)
+""" Handle requests to /climate URL """
 
-			response = database.insertIntoClimate(content['date'],content['rainfall'], content['temperature'])
-			if (response):
+	# POST /climate - Add row to table climate 
+	if request.method == 'POST':
+
+		if request.is_json:
+
+			content = request.get_json()
+			response = database.insertIntoClimate(content['date'],
+				content['rainfall'], content['temperature'])
+
+			if response:
 				return jsonify({"message": "Climate added"})
 			else:
-				return jsonify({"message": "Something wrong with JSON file"})
+				return jsonify({"message": "Something wrong with JSON file or Database Error"})
 		else:
 			return jsonify({"message": "It is not a JSON file"})
 
-	# List all rows of climate according to filters
+
+	# GET /climate - List all table climate's rows according to filters applied
 	else:
-		#Get filters sent through URL
-		date = request.args.get('date', default = None, type = str)
-		rainfall = request.args.get('rainfall', default = None, type = float)
-		temperature = request.args.get('temperature', default = None, type = int)
-		month = request.args.get('month', default = None, type = int)
-		year = request.args.get('year', default = None, type = int)
+		# Get filters sent through URL
+		date = request.args.get('date', default = None, 
+			type = str)
+		rainfall = request.args.get('rainfall', default = None, 
+			type = float)
+		temperature = request.args.get('temperature', default = None, 
+			type = int)
+		month = request.args.get('month', default = None, 
+			type = int)
+		year = request.args.get('year', default = None, 
+			type = int)
 
-		#Check date filter appplied
+		# Check format of date filter in case it is appplied
 		try:
-			if (date == None):
-				pass
-			else:
+			if (date != None):
 				datetime.datetime.strptime(date, '%d-%m-%Y')
-		except:
-			return jsonify({"message":"Date filter should have 'DD-MM-YYYY' format"})
+				
+		except ValueError:
+			return jsonify({"message":
+				"Date filter should have 'DD-MM-YYYY' format"})
 
-		#Get rows from database
-		rows = database.selectAllFromClimate(date, rainfall, temperature, month, year)
+		# Get rows from database
+		rows = database.selectAllFromClimate(date, 
+			rainfall, temperature, month, year)
 
 		# Return rows as JSON
 		return jsonify(rows)
 		
 
-
-"""
-	GET /climate/<id> - List one row 
-	DELETE /climate/<id> - Delete one row
-"""
 @app.route('/climate/<id>', methods=['GET', 'DELETE'])
 def climateIDReq(id):
-	
+""" Handle requests to /climate/<id> 
+
+Keyword arguments:
+id -- int
+
+"""
+	# GET /climate/<id> - List one row 
 	if request.method == 'GET':
 		row = database.selectRowFromClimate(id)
 
-		#Return row as JSON
+		# Return row as JSON
 		return jsonify(row)
 
+	# DELETE /climate/<id> - Delete one row
 	else:
+
 		response = database.deleteRowFromClimate(id)
-		if (response):
+
+		if response:
 			return jsonify({"message": "Climate successfully deleted"})
 		else:
-			return jsonify({"message": "Could not delete Climate"})
+			return jsonify({"message": "Climate could not be deleted"})
 
 
-"""
-	GET /climate/predict - climate prediction for today according to Exponential Moving Average
-"""
+
 @app.route('/climate/predict')
 def climatePredictReq():
-	#Define Temp and Rain Beta (0.7 or 0.8 are recommended)
+""" Handle request to /climate/predict """
+
+	#GET /climate/predict - today's climate prediction 
+
+
+	# Define Temp and Rain Beta (0.7 or 0.8 are recommended)
 	betaT = 0.8
 	betaR = 0.85 
 
 	#Get rows from database
 	rows = database.selectRowsToPredict()
 
-	# Return prediction in case there are some entries from the last 30 days
-	if(len(rows) != 0):
+	# Return prediction in case there are at least a few entries from the last 30 days
+	if len(rows) != 0:
+
+		# Get temperature prediction
 		tempPrediction = predict(rows, betaT, 'temperature')
+		# Get rainfall prediction
 		rainPrediction = predict(rows, betaR, 'rainfall')
-		return jsonify({"todays-temperature-prediction":tempPrediction, "todays-rainfall-prediction":rainPrediction})
+
+		# Return JSON result
+		return jsonify({"todays-temperature-prediction":tempPrediction,
+			"todays-rainfall-prediction":rainPrediction})
 	else:
-		return jsonify({"message": "Unable to predict. No entry from the last 30 days was added yet."})
+		if rows != None:
+			return jsonify({"message": 
+				"Unable to predict. No entry from the last 30 days was added yet."})
+		else:
+			return jsonify({"message":"Database Error"})
 	
 
 def predict(rows, beta, attribute):
+""" Calculate prediction according to Exponential Moving Average method 
+	
+Keyword arguments:
+rows -- list of dicts
+beta -- float
+attribute -- str
+
+"""
 	today = datetime.date.today()
 	totalWeights = 0
 	totalWeighted = 0
@@ -115,4 +147,4 @@ def predict(rows, beta, attribute):
 	return prediction
 
 if __name__ == '__main__':
-	app.run()
+	app.run(host='0.0.0.0', threaded=True)
